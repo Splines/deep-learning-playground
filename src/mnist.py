@@ -1,10 +1,16 @@
 # 🌐 MINST Dataset
 # https://deepai.org/dataset/mnist
 
+import logging
+
 import numpy as np
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 from model import NN
+
+logging.basicConfig(filename='nn.log', filemode='w',
+                    encoding='utf-8', level=logging.INFO)
 
 # --- Our model
 
@@ -28,7 +34,7 @@ batch_size = 50
 batches_count = 60000//batch_size  # no. of total batches to process
 step_size = 0.001
 plot_cost_after_every_n_batches = 20
-epochs = 10
+epochs = 100
 
 
 ################################ MNIST NN ######################################
@@ -76,25 +82,30 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
     accuracies = np.zeros(batches_count)
 
     # --- Set up plot
-    plt.ion()
-    x = np.linspace(0, batches_count, batches_count)
-    fig, ax = plt.subplots()
-    ax.set_xlabel('Batch')
-    ax.set_ylabel('Cost & Accuracy')
-    ax.set_title('NN cost')
-    ax.set_ylim([0, 1.3])
-    ax.set_xlim([0, batches_count])
-    graph_cost = ax.plot(x, costs, label='cost')[0]
-    graph_accuracy = ax.plot(x, accuracies, label='accuracy')[0]
-    ax.legend()
-    plt.draw()
+    # plt.ion()
+    # x = np.linspace(0, batches_count, batches_count)
+    # fig, ax = plt.subplots()
+    # ax.set_xlabel('Batch')
+    # ax.set_ylabel('Cost & Accuracy')
+    # ax.set_title('NN cost')
+    # ax.set_ylim([0, 1.3])
+    # ax.set_xlim([0, batches_count])
+    # graph_cost = ax.plot(x, costs, label='cost')[0]
+    # graph_accuracy = ax.plot(x, accuracies, label='accuracy')[0]
+    # ax.legend()
+    # plt.draw()
 
     # Start training
     for epoch in range(epochs):
-        print(f'⭕⭕⭕ Epoch {epoch+1}/{epoch}')
-        for batch in range(batches_count):
+        epoch_str = f'⭕⭕⭕ Epoch {epoch+1}/{epochs}'
+        print(epoch_str)
+        logging.info(epoch_str)
+
+        for batch in tqdm(range(batches_count)):
             # --- Process one batch
-            print(f'⏺ Batch {batch+1}')
+            batch_str = f'⏺ Batch {batch+1}'
+            # print(batch+1, end=', ', flush=True)
+            logging.info(batch_str)
 
             correct_predictions_count = 0
             for j in range(batch_size):
@@ -116,17 +127,26 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
                 if is_prediction_correct:
                     correct_predictions_count += 1
                 # note that cost is only not None for the last sample in the batch
-            costs[batch] = cost
-            accuracies[batch] = correct_predictions_count / batch_size
+            # costs[batch] = cost
+            # accuracies[batch] = correct_predictions_count / batch_size
+
+            logging.info(
+                f'Cost: {cost} \t\t | Accuracy: {correct_predictions_count / batch_size}')
+            # logging.info(f'Accuracy: {correct_predictions_count / batch_size}')
 
             # Plot cost
-            # live matplotlib updates: https://stackoverflow.com/a/16446688
-            if batch % (plot_cost_after_every_n_batches-1) == 0:
-                graph_cost.set_ydata(costs)
-                graph_accuracy.set_ydata(accuracies)
-                plt.draw()
-                # ax.set_ylim([0, np.max(costs)])
-                plt.pause(0.01)
+            # live matplotlib updates: https: // stackoverflow.com/a/16446688
+            # if batch % (plot_cost_after_every_n_batches-1) == 0:
+            #     graph_cost.set_ydata(costs)
+            #     graph_accuracy.set_ydata(accuracies)
+            #     plt.draw()
+            #     # ax.set_ylim([0, np.max(costs)])
+            #     plt.pause(0.01)
 
-    plt.ioff()
-    plt.show()
+        # Save weights & biases after epoch
+        with open(f'./temp/epoch_{epoch+1}.npy', 'wb') as f:
+            np.save(f, model.get_weights())
+            np.save(f, model.get_biases())
+
+    # plt.ioff()
+    # plt.show()

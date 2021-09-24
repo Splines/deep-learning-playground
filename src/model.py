@@ -5,9 +5,6 @@ import numpy as np
 
 from helper import encode_one_hot, normalize, relu, sigmoid, softmax
 
-logging.basicConfig(filename='nn.log', filemode='w',
-                    encoding='utf-8', level=logging.INFO)
-
 
 class NN:
 
@@ -54,12 +51,19 @@ class NN:
         self.biases_desired_changes = [[]] + \
             [np.empty((n, 1), dtype='float64') for n in self.layer_sizes[1:]]
 
+    def get_weights(self):
+        return self.weights
+
+    def get_biases(self):
+        return self.biases
+
     def log_state(self):
-        logging.info('###### State information ######')
-        logging.info('--- Weights')
-        logging.info(self.weights)
-        logging.info('--- Biases')
-        logging.info(self.biases)
+        pass
+        # logging.info('###### State information ######')
+        # logging.info('--- Weights')
+        # logging.info(self.weights)
+        # logging.info('--- Biases')
+        # logging.info(self.biases)
 
     def train(self, input, desired):
         """Trains the neural net with one sample."""
