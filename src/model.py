@@ -9,7 +9,7 @@ import numpy as np
 from helper import encode_one_hot, normalize, relu, sigmoid, softmax
 
 logging.basicConfig(filename='nn.log', filemode='w',
-                    encoding='utf-8', level=logging.DEBUG)
+                    encoding='utf-8', level=logging.INFO)
 
 
 class NN:
@@ -20,13 +20,14 @@ class NN:
 
         Parameters:
             layers: [ layer1_n, layer2_n, layer3_n, ... ]
+            batch_size: the size of the batch
+            step_size: factor the gradients are multiplied with
         """
         # Set metadata
         if not len(layers) >= 2:
             raise TypeError(
                 "Specify at least two layers for the neural network")
         self.layer_sizes = layers
-        self.done = False
         self.batch_size = batch_size
         self.count = 0
         self.cost = 0
@@ -87,7 +88,8 @@ class NN:
         if self.count == self.batch_size:
             # Get & reset cost
             self.cost /= self.batch_size  # average
-            print(f"C={self.cost}")
+            # print(f"C={self.cost}")
+            cost_tmp = self.cost
             self.cost = 0
 
             # Learn
@@ -96,6 +98,10 @@ class NN:
 
             # Reset batch
             self.count = 0
+
+            return cost_tmp
+
+        return None
 
     def _feed_forward(self, input):
         """Feeds forward through neural network. Returns the output neurons."""
@@ -169,24 +175,20 @@ class NN:
                 self.biases_desired_changes[l] += biases
 
     def _learn(self):
-        """Do a gradient step after having gone through a mini batch"""
+        """Does a gradient step after having gone through a mini batch"""
         # Go through layers (except input layer)
         for l in range(1, len(self.neurons)):
             # Get desired changes of weights & biases
             # (average over the desired changes of each sample in the mini batch)
             self.weights_desired_changes[l] /= self.batch_size  # average
-            self.weights_desired_changes[l] *= self.step_size
-            self.weights_desired_changes[l] *= -1
+            self.weights_desired_changes[l] *= self.step_size  # step size
+            self.weights_desired_changes[l] *= -1  # negative gradient
 
             self.biases_desired_changes[l] /= self.batch_size  # average
-            self.biases_desired_changes[l] *= self.step_size
-            self.biases_desired_changes[l] *= -1
+            self.biases_desired_changes[l] *= self.step_size  # step size
+            self.biases_desired_changes[l] *= -1  # negative gradient
 
             # Adjust weights & biases to "learn"
-            # negative gradient
-            if not self.done:
-                print(self.weights_desired_changes[l])
-                self.done = True
             self.weights[l] += self.weights_desired_changes[l]
             self.biases[l] += self.biases_desired_changes[l]
 

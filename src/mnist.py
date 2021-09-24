@@ -1,3 +1,5 @@
+from re import T
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -18,8 +20,20 @@ from model import NN
 #               16 biases                    16 biases               10 biases                             <- #biases
 #          weights_2, biases_2         weights_3, biases_3      weights_4, biases_4
 
+
+########################### 🔍 Hyperparameters 🔍 ##############################
+layer_sizes = [784, 16, 16, 10]
+batch_size = 100
+batches_count = 100  # no. of total batches to process
+step_size = 0.0001
+plot_cost_after_every_n_batches = 10
+
+
+################################ MNIST NN ######################################
 with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-images.idx3-ubyte", "r") as images,\
         open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-labels.idx1-ubyte", "r") as labels:
+
+    # More info about the MNIST dataset: https://deepai.org/dataset/mnist
 
     # --- Header (images)
     print('▶ Processing header')
@@ -46,27 +60,51 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
     print(f"#labels\t\t {label_count}")
 
     # --- Prepare for training & start
-    batch_size = 10
     print()
     print('▶ Processing images')
-    model = NN([784, 16, 16, 10], batch_size, 0.0001)
+    model = NN(layer_sizes, batch_size, step_size)
 
-    # for i in range(60000/batch_size): # in range(label_count / batch_size)
-    for i in range(10):  # no. of total batches
+    # Set up plot
+    costs = np.zeros(batches_count)
+    plt.ion()
+    x = np.linspace(0, batches_count, batches_count, endpoint=False)
+    fig, ax = plt.subplots()
+    ax.set_xlabel('Batch')
+    ax.set_ylabel('Cost')
+    ax.set_title('NN cost')
+    graph = ax.plot(x, costs)[0]
+    plt.draw()
+
+    # Start training
+    for batch in range(batches_count):
         # --- Process one batch
-        print(f'⏺ Processing {i+1}. batch')
+        print(f'⏺ Batch {batch+1}')
+
+        cost = None
         for j in range(batch_size):
-            offset = i*batch_size + j
+            # image_count = i * batch_size + j
+
             # Image
-            img = np.fromfile(images, dtype=np.ubyte,
-                              count=28*28, offset=28*28*offset)
+            img = np.fromfile(images, dtype=np.ubyte, count=28*28)
             # plt.imshow(img.reshape((28, 28)), cmap="gray")
+            # plt.show()
 
             # Label
-            label = np.fromfile(labels, dtype=np.ubyte,
-                                count=1, offset=offset)[0]
-            print(f"Processing image with label {label}")
+            label = np.fromfile(labels, dtype=np.ubyte, count=1)
+            label = label[0]
+            # print(f"Processing image with label {label}")
 
-            plt.show()
+            # 🧠 Train model 🧠
+            cost = model.train(img, label)
+            # only not None for the last sample in the batch
+        costs[batch] = cost
 
-            model.train(img, label)
+        # Plot cost
+        if batch % (plot_cost_after_every_n_batches-1) == 0:
+            graph.set_ydata(costs)
+            plt.draw()
+            ax.set_ylim([0, np.max(costs)])
+            plt.pause(0.01)
+
+    plt.ioff()
+    plt.show()
