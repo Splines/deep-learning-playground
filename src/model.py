@@ -44,7 +44,6 @@ class NN:
         standard_deviation = sqrt(2.0 / self.layer_sizes[0])
         self.weights = [[]] + [np.random.randn(self.layer_sizes[i+1], k).astype('float64') * standard_deviation
                                for i, k in enumerate(self.layer_sizes[:-1])]
-
         # biases are initialized by default to 0
         self.biases = [[]] + [np.zeros((n, 1), dtype='float64')
                               for n in self.layer_sizes[1:]]
@@ -65,21 +64,23 @@ class NN:
         logging.info(self.biases)
 
     def train(self, input, desired):
+        """Trains the neural net with one sample."""
         # more desired values than output neurons
         if desired >= self.layer_sizes[-1]:
             raise ValueError(
                 f"Desired value is {desired} but must be smaller than {len(self.neurons[-1])}")
 
-        # Feed forward & Propagate back
+        # --- Feed forward & Propagate back
         output = self._feed_forward(input)
         # print(output)
-        self._propagate_back(desired)
+        desired = encode_one_hot(desired, len(output))
+        # Propagate back (reset desired changes at start of new batch)
+        self._propagate_back(
+            desired, should_reset_desired_changes=self.count == 0)
 
         # Calc cost
-        desired = encode_one_hot(desired, len(output))
-
         # self.cost += np.sum((output-desired)**2)
-        self.cost = np.sum(np.square(output-desired))
+        self.cost += np.sum(np.square(output-desired))
 
         # Learn after <batch_size> trainings
         self.count += 1
@@ -117,12 +118,12 @@ class NN:
             self.neurons[l] = self._activation(self.neurons_z[l])
 
         # Last layer: add softmax to get probabilities in range [0,1]
-        self.neurons[-1] = softmax(self.neurons[-1])
+        # self.neurons[-1] = softmax(self.neurons[-1])
 
         # Return neurons of output layer
-        return self.neurons[-1]
+        return softmax(self.neurons[-1])
 
-    def _propagate_back(self, desired):
+    def _propagate_back(self, desired, should_reset_desired_changes=False):
         """
         Propagates back the results and saves desired changes to weights and biases.
         Note that we do not make any changes to weights or biases at this point yet (this is done in _learn()).
@@ -160,8 +161,12 @@ class NN:
             delC_delWeights = biases @ delZ_delWeights.T
 
             # Add to desired weights & biases
-            self.weights_desired_changes[l] += delC_delWeights
-            self.biases_desired_changes[l] += biases
+            if should_reset_desired_changes:
+                self.weights_desired_changes[l] = delC_delWeights
+                self.biases_desired_changes[l] = biases
+            else:
+                self.weights_desired_changes[l] += delC_delWeights
+                self.biases_desired_changes[l] += biases
 
     def _learn(self):
         """Do a gradient step after having gone through a mini batch"""
@@ -182,16 +187,13 @@ class NN:
             if not self.done:
                 print(self.weights_desired_changes[l])
                 self.done = True
-            self.weights[l] *= self.weights_desired_changes[l]
-            self.biases[l] *= self.biases_desired_changes[l]
+            self.weights[l] += self.weights_desired_changes[l]
+            self.biases[l] += self.biases_desired_changes[l]
 
     def _activation(self, vector):
-        # Sigmoid
-        # return np.array([sigmoid(x) for x in vector])
-
         # ReLu
         activated = [relu(x) for x in vector]
-        return np.array(activated, ndmin=2)  # 2D col vector
+        return np.array(activated, ndmin=2)  # col vector
 
     def _derive_activation(self, x):
         """Calculates the derivative of the activation function"""
