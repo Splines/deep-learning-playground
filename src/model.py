@@ -69,6 +69,10 @@ class NN:
                 f"Desired value is {desired} but must be smaller than {len(self.neurons[-1])}")
 
         # --- Feed forward & Propagate back
+        # Scale 0..255 to 0..1
+        input = (input / 255).astype('float32')
+        input = input.reshape(input.shape[0], 1)
+
         output = self._feed_forward(input)
         label_prediction = np.argmax(output)
         is_prediction_correct = (label_prediction == desired)
@@ -98,6 +102,12 @@ class NN:
             # Reset batch
             self.count = 0
 
+            # Check gradients
+            # weights_abs_means = [np.mean(
+            #     np.absolute(self.weights_desired_changes[l])
+            # ) for l in range(1, len(self.neurons))]
+            # print(f' Mean is: {weights_abs_means}')
+
             return (is_prediction_correct, cost_tmp)
 
         return (is_prediction_correct, None)
@@ -109,10 +119,10 @@ class NN:
             raise TypeError(f"Input must be a ndarray")
         if not input.size == self.layer_sizes[0]:
             raise TypeError(
-                f"Input contains {input.size} entries, however the input layer is expecting {len(self.neurons[0])} entries")
+                f"Input contains {input.size} entries, however the input layer is expecting {self.layer_sizes[0]} entries")
 
         # Set input layer
-        self.neurons[0] = input.reshape(input.shape[0], 1)
+        self.neurons[0] = input
 
         # Feed forward through all layers, start with layer l=1
         for l in range(1, len(self.neurons)):
