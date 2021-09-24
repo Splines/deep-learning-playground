@@ -170,17 +170,20 @@ class NN:
             # Get desired changes of weights & biases
             # (average over the desired changes of each sample in the mini batch)
             self.weights_desired_changes[l] /= self.batch_size  # average
+            self.weights_desired_changes[l] *= self.step_size
+            self.weights_desired_changes[l] *= -1
+
             self.biases_desired_changes[l] /= self.batch_size  # average
+            self.biases_desired_changes[l] *= self.step_size
+            self.biases_desired_changes[l] *= -1
 
             # Adjust weights & biases to "learn"
             # negative gradient
             if not self.done:
                 print(self.weights_desired_changes[l])
                 self.done = True
-            self.weights[l] *= (-1*self.step_size *
-                                self.weights_desired_changes[l])
-            self.biases[l] *= (-1*self.step_size *
-                               self.biases_desired_changes[l])
+            self.weights[l] *= self.weights_desired_changes[l]
+            self.biases[l] *= self.biases_desired_changes[l]
 
     def _activation(self, vector):
         # Sigmoid
