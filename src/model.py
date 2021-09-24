@@ -70,7 +70,9 @@ class NN:
 
         # --- Feed forward & Propagate back
         output = self._feed_forward(input)
-        # print(output)
+        label_prediction = np.argmax(output)
+        is_prediction_correct = (label_prediction == desired)
+
         desired = encode_one_hot(desired, len(output))
         # Propagate back (reset desired changes at start of new batch)
         self._propagate_back(
@@ -96,9 +98,9 @@ class NN:
             # Reset batch
             self.count = 0
 
-            return cost_tmp
+            return (is_prediction_correct, cost_tmp)
 
-        return None
+        return (is_prediction_correct, None)
 
     def _feed_forward(self, input):
         """Feeds forward through neural network. Returns the output neurons."""

@@ -24,8 +24,8 @@ from model import NN
 
 ########################### 🔍 Hyperparameters 🔍 ##############################
 layer_sizes = [784, 16, 16, 10]
-batch_size = 100
-batches_count = 100  # no. of total batches to process
+batch_size = 50
+batches_count = 5000  # no. of total batches to process
 step_size = 0.0001
 plot_cost_after_every_n_batches = 10
 
@@ -62,16 +62,19 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
     print()
     print('▶ Processing images')
     model = NN(layer_sizes, batch_size, step_size)
+    costs = np.zeros(batches_count)
+    accuracies = np.zeros(batches_count)
 
     # Set up plot
-    costs = np.zeros(batches_count)
     plt.ion()
     x = np.linspace(0, batches_count, batches_count, endpoint=False)
     fig, ax = plt.subplots()
     ax.set_xlabel('Batch')
     ax.set_ylabel('Cost')
     ax.set_title('NN cost')
-    graph = ax.plot(x, costs)[0]
+    graph_cost = ax.plot(x, costs, label='cost')[0]
+    graph_accuracy = ax.plot(x, accuracies, label='accuracy')[0]
+    ax.legend()
     plt.draw()
 
     # Start training
@@ -79,7 +82,7 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
         # --- Process one batch
         print(f'⏺ Batch {batch+1}')
 
-        cost = None
+        correct_predictions_count = 0
         for j in range(batch_size):
             # image_count = i * batch_size + j
 
@@ -94,13 +97,18 @@ with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-image
             # print(f"Processing image with label {label}")
 
             # 🧠 Train model 🧠
-            cost = model.train(img, label)
-            # only not None for the last sample in the batch
+            is_prediction_correct, cost = model.train(img, label)
+            if is_prediction_correct:
+                correct_predictions_count += 1
+            # note that cost is only not None for the last sample in the batch
         costs[batch] = cost
+        accuracies[batch] = correct_predictions_count / batch_size
 
         # Plot cost
+        # live matplotlib updates: https://stackoverflow.com/a/16446688
         if batch % (plot_cost_after_every_n_batches-1) == 0:
-            graph.set_ydata(costs)
+            graph_cost.set_ydata(costs)
+            graph_accuracy.set_ydata(accuracies)
             plt.draw()
             ax.set_ylim([0, np.max(costs)])
             plt.pause(0.01)
