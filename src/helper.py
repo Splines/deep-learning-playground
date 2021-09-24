@@ -26,8 +26,11 @@ def sigmoid(x):
         return z / (1 + z)
 
 
-def softmax(x):
-    return np.exp(x) / np.sum(np.exp(x))
+def softmax(z):
+    """Numerically stable softmax function."""
+    shiftZ = z - np.max(z)  # make the max of z to be 0 for numerical stability
+    exp = np.exp(shiftZ)
+    return exp / np.sum(exp)
 
 
 def random_float(low, high):
@@ -35,4 +38,5 @@ def random_float(low, high):
 
 
 def encode_one_hot(x, size):
-    return np.eye(size)[x]
+    one_hot = np.eye(size)[x]
+    return one_hot.reshape(one_hot.shape[0], 1)
