@@ -1,6 +1,3 @@
-# MINST Dataset
-# https://deepai.org/dataset/mnist
-
 import logging
 from math import sqrt
 

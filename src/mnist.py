@@ -1,4 +1,5 @@
-from re import T
+# 🌐 MINST Dataset
+# https://deepai.org/dataset/mnist
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -32,8 +33,6 @@ plot_cost_after_every_n_batches = 10
 ################################ MNIST NN ######################################
 with open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-images.idx3-ubyte", "r") as images,\
         open("C:/Users/domin/Desktop/DeepLearning/GradientDescent/mnist/train-labels.idx1-ubyte", "r") as labels:
-
-    # More info about the MNIST dataset: https://deepai.org/dataset/mnist
 
     # --- Header (images)
     print('▶ Processing header')
